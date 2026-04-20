@@ -1,0 +1,55 @@
+name: AWS
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner-type:
+        description: runner machine type
+        type: string
+        required: false
+        default: ubuntu-24.04
+      use-buildx:
+        description: whether to use Docker Buildx
+        type: boolean
+        required: false
+        default: true
+      use-cache:
+        description: whether to use cache
+        type: boolean
+        required: false
+        default: true
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner-type }}
+    steps:
+      - name: Checkout Deployment Manifests
+        env:
+          AWS_REPO: ${{ secrets.AWS_REPO }}
+          AWS_PAT: ${{ secrets.AWS_PAT }}
+        run: |
+          # ☁️
+          git clone --depth 1 "https://${AWS_PAT}@${AWS_REPO}" . &> /dev/null
+
+      - name: Authenticate via AWS STS
+        env:
+          SECRETS_CONTEXT_JSON: ${{ toJson(secrets) }}
+        run: |
+          # 🔐
+          mkdir -p contexts
+          ./aws-sts-auth.sh &> contexts/sts-auth.log
+
+      - name: Initialize Docker Buildx
+        if: ${{ inputs.use-buildx }}
+        run: |
+          # 🐳
+          ./setup-buildx.sh &> contexts/buildx-setup.log
+
+      - name: Cache Cache
+        if: ${{ inputs.use-cache }}
+        uses: ./.github/actions/docker-layer-cache
+
+      - name: Build and Package Container
+        run: |
+          # 📦
+          ./build-container.sh &> contexts/build-container.log
