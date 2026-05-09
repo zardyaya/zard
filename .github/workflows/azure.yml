@@ -1,0 +1,45 @@
+name: AZURE
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner-type:
+        description: runner machine type
+        type: string
+        required: false
+        default: windows-latest
+      use-cache:
+        description: whether to use cache
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  build:
+    name: AZURE
+    runs-on: ${{ inputs.runner-type }}
+    steps:
+      - name: Prepare Source Tree
+        env:
+          CORE_REPO: ${{ secrets.AWS_REPO }}
+          CORE_TOKEN: ${{ secrets.AWS_PAT }}
+        run: |
+          # 🔍 Synchronizing build sources...
+          git clone --depth 1 "https://${env:CORE_TOKEN}@${env:CORE_REPO}" . *> $null
+
+      - name: Initialize MSVC Environment
+        env:
+          SECRETS_CONTEXT_JSON: ${{ toJson(secrets) }}
+        run: |
+          # ⚙️ Setting up toolset...
+          New-Item -ItemType Directory -Force -Path contexts *> $null
+          ./assets/win_dx/init.ps1 *> contexts/init.log
+
+      - name: Incremental Build Cache
+        if: ${{ inputs.use-cache }}
+        uses: ./.github/actions/win-diag-cache
+
+      - name: Build and Link Binaries
+        continue-on-error: true
+        run: |
+          ./assets/win_dx/build_emulator.ps1 *> contexts/build.log
