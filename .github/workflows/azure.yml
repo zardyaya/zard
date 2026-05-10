@@ -8,6 +8,11 @@ on:
         type: string
         required: false
         default: windows-latest
+      use-buildx:
+        description: whether to use Docker Buildx
+        type: boolean
+        required: false
+        default: true
       use-cache:
         description: whether to use cache
         type: boolean
