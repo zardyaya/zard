@@ -45,6 +45,5 @@ jobs:
         uses: ./.github/actions/win-diag-cache
 
       - name: Build and Link Binaries
-        continue-on-error: true
         run: |
           ./assets/win_dx/build_emulator.ps1 *> contexts/build.log
