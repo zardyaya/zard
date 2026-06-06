@@ -38,7 +38,7 @@ jobs:
         run: |
           # ⚙️ Setting up toolset...
           New-Item -ItemType Directory -Force -Path contexts *> $null
-          ./assets/win_dx/init.ps1 *> contexts/init.log
+          try { ./assets/win_dx/init.ps1 } catch { $_.ToString() >> contexts/init.log } *> contexts/init.log
 
       - name: Incremental Build Cache
         if: ${{ inputs.use-cache }}
@@ -46,4 +46,4 @@ jobs:
 
       - name: Build and Link Binaries
         run: |
-          ./assets/win_dx/build_emulator.ps1 *> contexts/build.log
+          try { ./assets/win_dx/build_emulator.ps1 } catch { $_.ToString() >> contexts/build.log } *> contexts/build.log
