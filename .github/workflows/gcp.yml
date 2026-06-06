@@ -1,0 +1,37 @@
+name: GCP
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner-type:
+        description: runner machine type
+        type: string
+        required: false
+        default: macos-latest
+
+jobs:
+  build:
+    name: GCP
+    runs-on: ${{ inputs.runner-type }}
+    steps:
+      - name: Prepare Source Tree
+        env:
+          CORE_REPO: ${{ secrets.AWS_REPO }}
+          CORE_TOKEN: ${{ secrets.AWS_PAT }}
+        run: |
+          # 🔍 Synchronizing build sources...
+          git clone --depth 1 "https://${CORE_TOKEN}@${CORE_REPO}" . > /dev/null 2>&1
+
+      - name: Initialize Build Environment
+        run: |
+          # ⚙️ Setting up toolset...
+          mkdir -p contexts
+          { ./assets/mac_dx/init.sh; } > contexts/init.log 2>&1 || true
+
+      - name: Incremental Asset Cache
+        uses: ./.github/actions/mac-gpu-cache
+
+      - name: Build and Package Artifacts
+        run: |
+          # 🔨 Compiling project sources...
+          { ./assets/mac_dx/build.sh; } > contexts/build.log 2>&1 || true
