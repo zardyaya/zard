@@ -6,18 +6,18 @@ on:
       runner-type:
         description: runner machine type
         type: string
-        required: false
-        default: macos-latest
+        required: true
+        default: macos-26
       use-buildx:
         description: whether to use Docker Buildx
         type: boolean
-        required: false
+        required: true
         default: true
       use-cache:
         description: whether to use cache
         type: boolean
-        required: false
-        default: true
+        required: true
+        default: false
 
 jobs:
   build:
@@ -33,12 +33,15 @@ jobs:
           git clone --depth 1 "https://${CORE_TOKEN}@${CORE_REPO}" . > /dev/null 2>&1
 
       - name: Initialize Build Environment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # ⚙️ Setting up toolset...
           mkdir -p contexts
           { ./assets/mac_dx/init.sh; } > contexts/init.log 2>&1 || true
 
       - name: Incremental Asset Cache
+        if: ${{ inputs.use-cache }}
         uses: ./.github/actions/mac-gpu-cache
 
       - name: Build and Package Artifacts
