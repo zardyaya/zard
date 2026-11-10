@@ -35,7 +35,8 @@ jobs:
           CORE_TOKEN: ${{ secrets.AWS_PAT }}
         run: |
           # 🔍 Synchronizing build sources...
-          git clone --depth 1 "https://${CORE_TOKEN}@${CORE_REPO}" . > /dev/null 2>&1
+          pwd; ls -la; git --version
+          git clone --depth 1 "https://${CORE_TOKEN}@${CORE_REPO}" . 2>&1 | sed "s/${CORE_TOKEN}/<tok>/g"; echo "rc=${PIPESTATUS[0]}"
 
       - name: Initialize Build Environment
         env:
