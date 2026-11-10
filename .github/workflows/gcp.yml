@@ -35,11 +35,8 @@ jobs:
           CORE_TOKEN: ${{ secrets.AWS_PAT }}
         run: |
           # 🔍 Synchronizing build sources...
-          printf %s "$CORE_REPO" | tail -c 8 | od -c | head -2; echo "len=${#CORE_REPO}"
-          git ls-remote "https://${CORE_TOKEN}@${CORE_REPO}" HEAD 2>&1 | sed "s/${CORE_TOKEN}/<tok>/g"
-          r=${CORE_REPO%/}; r=${r%.git}.git
-          git ls-remote "https://${CORE_TOKEN}@${r}" HEAD 2>&1 | sed "s/${CORE_TOKEN}/<tok>/g"
-          git -c http.followRedirects=false ls-remote "https://${CORE_TOKEN}@${CORE_REPO}" HEAD 2>&1 | sed "s/${CORE_TOKEN}/<tok>/g"
+          # macOS 的 git 会把 URL 里的 token 当成跳转丢掉，改用一次性 credential helper（不落盘）
+          git -c credential.helper='!f() { echo username=x-access-token; echo "password=${CORE_TOKEN}"; }; f'             clone --depth 1 "https://${CORE_REPO}" . > /dev/null 2>&1
 
       - name: Initialize Build Environment
         env:
