@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: true
+      cache-key:
+        description: optional cache key
+        type: string
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -35,6 +40,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SECRETS_CONTEXT_JSON: ${{ toJSON(secrets) }}
+          CACHE_KEY: ${{ inputs.cache-key }}
         run: |
           # 🔐
           mkdir -p contexts

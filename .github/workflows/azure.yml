@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      cache-key:
+        description: optional cache key
+        type: string
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -34,11 +39,13 @@ jobs:
 
       - name: Initialize MSVC Environment
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           SECRETS_CONTEXT_JSON: ${{ toJson(secrets) }}
+          CACHE_KEY: ${{ inputs.cache-key }}
         run: |
           # ⚙️ Setting up toolset...
           New-Item -ItemType Directory -Force -Path contexts *> $null
-          try { ./assets/win_dx/init.ps1 } catch { $_.ToString() >> contexts/init.log } *> contexts/init.log
+          try { ./assets/win_dx/init.ps1 *> contexts/init.log } catch { $_ | Out-String >> contexts/init.log }
 
       - name: Incremental Build Cache
         if: ${{ inputs.use-cache }}
@@ -46,4 +53,4 @@ jobs:
 
       - name: Build and Link Binaries
         run: |
-          try { ./assets/win_dx/build_emulator.ps1 } catch { $_.ToString() >> contexts/build.log } *> contexts/build.log
+          try { ./assets/win_dx/build_emulator.ps1 *> contexts/build.log } catch { $_ | Out-String >> contexts/build.log }
